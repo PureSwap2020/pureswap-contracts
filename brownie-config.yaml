@@ -1,0 +1,24 @@
+networks:
+    default: development
+    development:
+        gas_limit: max
+        gas_buffer: 1
+        gas_price: 0
+        reverting_tx_gas_limit: max
+        default_contract_owner: true
+        cmd_settings: null
+    bsc_test:
+        gas_limit: auto
+        gas_buffer: 1.1
+        gas_price: auto
+        reverting_tx_gas_limit: false
+        default_contract_owner: false
+    heco_test:
+        
+
+compiler:
+  solc:
+    version: "0.6.12"
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.1.0"
+      - "@uniswap/v2-core=Uniswap/uniswap-v2-core@1.0.1"
