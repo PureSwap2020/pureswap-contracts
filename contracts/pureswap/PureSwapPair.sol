@@ -93,8 +93,8 @@ contract PureSwapPair is PureSwapERC20 {
 
     // if fee is on, mint liquidity equivalent to 1/6th of the growth in sqrt(k)
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
-        address feeTo = IUniswapV2Factory(factory).feeTo();
-        feeOn = feeTo != address(0);
+        (address feeToPure, address feeToMx) = IUniswapV2Factory(factory).feeTo();
+        feeOn = feeToPure != address(0);
         uint _kLast = kLast; // gas savings
         if (feeOn) {
             if (_kLast != 0) {
@@ -104,8 +104,10 @@ contract PureSwapPair is PureSwapERC20 {
                     uint numerator = totalSupply.mul(rootK.sub(rootKLast));
                     uint denominator = rootK.mul(5).add(rootKLast);
                     uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
-                }
+                    if (liquidity > 0) {
+                        _mint(feeToPure, liquidity);
+                        _mint(feeToMx, liquidity);
+                    }                }
             }
         } else if (_kLast != 0) {
             kLast = 0;

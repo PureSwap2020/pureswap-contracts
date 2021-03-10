@@ -62,7 +62,7 @@ contract SingleChef is Ownable {
     // Bonus muliplier for early pureToken makers.
     uint256 public constant BONUS_MULTIPLIER = 1;
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
-    IMigratorChef public migrator;
+    // IMigratorChef public migrator;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -71,6 +71,8 @@ contract SingleChef is Ownable {
     uint256 public totalAllocPoint = 0;
     // The block number when PURE mining starts.
     uint256 public startBlock;
+    address public dispatcher;
+    uint256 public amountByMint;
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(
@@ -91,6 +93,10 @@ contract SingleChef is Ownable {
 
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
+    }
+
+    function setDispatcher(address _account) external onlyOwner {
+        dispatcher = _account;
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
@@ -263,22 +269,19 @@ contract SingleChef is Ownable {
         user.rewardDebt = 0;
     }
 
-    function emergencyPureWithdraw() public onlyOwner {
-        uint balance = pureToken.balanceOf(address(this));
-        if (balance > 0) {
-            pureToken.transfer(msg.sender, balance);
-        }
-    }
-
     // Safe pureToken transfer function, just in case if rounding error causes pool to not have enough PUREs.
     function safePureTokenTransfer(address _to, uint256 _amount) internal {
-        uint256 pureTokenBal = pureToken.balanceOf(address(this));
+        // uint256 pureTokenBal = pureToken.balanceOf(address(this));
+        uint256 pureTokenBal = pureToken.allowance(dispatcher, address(this));
         if (_amount > pureTokenBal) {
             if (pureTokenBal > 0) {
-                pureToken.transfer(_to, pureTokenBal);
+                amountByMint = amountByMint.add(pureTokenBal);
+                // pureToken.transfer(_to, pureTokenBal);
+                pureToken.transferFrom(dispatcher, _to, pureTokenBal);
             }
         } else {
-            pureToken.transfer(_to, _amount);
+            amountByMint = amountByMint.add(_amount);
+            pureToken.transferFrom(dispatcher, _to, _amount);
         }
     }
 

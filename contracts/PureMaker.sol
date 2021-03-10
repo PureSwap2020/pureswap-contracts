@@ -22,7 +22,7 @@ contract PureMaker is Ownable {
     // V1 - V5: OK
     IUniswapV2Factory public immutable factory;
     // V1 - V5: OK
-    address public immutable bar;
+    address public immutable bar = address(0);
     // V1 - V5: OK
     address private immutable pureToken;
     // V1 - V5: OK
@@ -45,12 +45,10 @@ contract PureMaker is Ownable {
 
     constructor(
         address _factory,
-        address _bar,
         address _pureToken,
         address _weth
     ) public {
         factory = IUniswapV2Factory(_factory);
-        bar = _bar;
         pureToken = _pureToken;
         weth = _weth;
     }
@@ -256,5 +254,10 @@ contract PureMaker is Ownable {
     {
         // X1 - X5: OK
         amountOut = _swap(token, pureToken, amountIn, bar);
+    }
+
+    function burn() public {
+        uint bal = IERC20(pureToken).balanceOf(address(this));
+        IERC20(pureToken).safeTransfer(address(0), bal);
     }
 }

@@ -6,7 +6,8 @@ import './interfaces/IUniswapV2Factory.sol';
 import './PureSwapPair.sol';
 
 contract PureSwapFactory is IUniswapV2Factory {
-    address public override feeTo;
+    address public feeToPure;
+    address public feeToMx;
     address public override feeToSetter;
     address public override migrator;
 
@@ -44,9 +45,15 @@ contract PureSwapFactory is IUniswapV2Factory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setFeeTo(address _feeTo) external override {
+    function feeTo() external view override returns(address _feeToPure, address _feeToMx) {
+        _feeToPure = feeToPure;
+        _feeToMx = feeToMx;
+    }
+
+    function setFeeTo(address _feeToPure, address _feeToMx) external override {
         require(msg.sender == feeToSetter, 'PureSwap: FORBIDDEN');
-        feeTo = _feeTo;
+        feeToPure = _feeToPure;
+        feeToMx = _feeToMx;
     }
 
     function setMigrator(address _migrator) external override {
