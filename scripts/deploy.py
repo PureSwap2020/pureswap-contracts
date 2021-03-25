@@ -42,6 +42,7 @@ elif (network_name == "bsc-test"):
     print(acc)
     # exit(0)
     accounts.default = acc
+    network.gas_price('20 gwei')
     wht = "0xae13d989dac2f0debff460ac112a837c89baa7cd"
 elif (network_name == "bsc-mainnet"):
     wht = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
@@ -59,12 +60,12 @@ def main():
     
     # PureMaker
     makerPure = maker(factory, pureToken)
-    makerMx = maker(factory, pureToken)
+    makerMx = maker(factory, mxToken)
     factory.setFeeTo(makerPure.address, makerMx.address)
-    pureChef = pure_chef(pureToken, 3*10**18, chain.height+20)
-    singleChef = single_chef(pureToken, 0.6*10**18, chain.height+20)
-    add_liqui(router, pureToken.address)
-    add_lpfarm(factory, pureChef)
+    pureChef = pure_chef(pureToken, 6*10**18, chain.height+20)
+    singleChef = single_chef(pureToken, 0.5*10**18, chain.height+20)
+    add_liqui2(router, pureToken.address, mxToken.address)
+    add_lpfarm2(factory, pureChef)
     add_singleFarm(singleChef, [pureToken.address, mxToken.address])
     approve(pureToken, pureChef, 0.51)
     approve(pureToken, singleChef, 0.1)
@@ -108,6 +109,41 @@ def add_liqui(router, pure_address):
                 else:
                     add_bnb_pure_liqui(router, token0s[i], 100, 0.5)
 
+def add_liqui2(router, pure_address, mx_address):
+    if (network_name == 'development'):
+        add_liqui_local()
+    elif (network_name == 'bsc-test'):
+        busd = MockToken.deploy("BUSD", "BUSD", 18).address
+        usdt = MockToken.deploy("USDT", "USDT", 6).address
+        btcb = MockToken.deploy("BTCB", "BTCB", 18).address
+        eth = MockToken.deploy("ETH", "ETH", 18).address
+        dai = MockToken.deploy("DAI", "DAI", 18).address
+        usdc = MockToken.deploy("USDC", "USDC", 6).address
+        cake = MockToken.deploy("CAKE", "CAKE", 18).address
+        xvs = MockToken.deploy("XVS", "XVS", 18).address
+        auto = MockToken.deploy("AUTO", "AUTO", 18).address
+
+        print("Pure: {}\n BTCB: {}\n BUSD: {}\n USDT: {}\n ETH: {}\n DAI: {}\n USDC: {}\n CAKE: {}\n XVS: {}\n AUTO: {}".format(pure_address, btcb, busd, usdt, eth, dai, usdc, cake, xvs, auto))
+
+        _add_liqui(router, pure_address, mx_address, 100000, 20000)    
+        _add_liqui(router, pure_address, busd, 100000, 10000)                
+        _add_liqui_with_decimal(router, mx_address, 18, busd, 18, 20000, 10000)
+        _add_liqui_with_decimal(router, usdt, 6, busd, 18, 10000, 10000)                  
+        _add_liqui_with_decimal(router, dai, 18, busd, 18, 10000, 10000)                   
+        _add_liqui_with_decimal(router, usdc, 6, busd, 18, 10000, 10000)                  
+        MockToken.at(btcb).approve(router.address, 100000*10**18)
+        MockToken.at(eth).approve(router.address, 100000*10**18)
+        MockToken.at(cake).approve(router.address, 100000*10**18)
+        MockToken.at(xvs).approve(router.address, 100000*10**18)
+        MockToken.at(auto).approve(router.address, 100000*10**18)
+        add_bnb_pure_liqui(router, pure_address, 20, 0.01)                         
+        add_bnb_pure_liqui(router, mx_address, 4, 0.01)                            
+        add_bnb_pure_liqui(router, busd, 2, 0.01)                            
+        add_bnb_pure_liqui(router, btcb, 2 / 50000, 0.01)                            
+        add_bnb_pure_liqui(router, eth, 2 / 1600, 0.01)                             
+        add_bnb_pure_liqui(router, cake, 2 / 12, 0.01)                            
+        add_bnb_pure_liqui(router, xvs, 2 / 35, 0.01)                            
+        add_bnb_pure_liqui(router, auto, 2 / 3000, 0.01)                            
 
 def _add_liqui(router, token0Address, token1Address, amount0, amount1, decimal=18):
     print(token0Address, token1Address)
@@ -116,6 +152,14 @@ def _add_liqui(router, token0Address, token1Address, amount0, amount1, decimal=1
     token0.approve(router.address, 1000000*10**18)
     token1.approve(router.address, 1000000*10**decimal)
     router.addLiquidity(token0Address, token1Address, int(amount0*10**18), int(amount1*10**decimal), int(amount0/2*10**18), int(amount1/2*10**decimal), accs[0], int(time.time())+100, {'allow_revert': True, 'gas_limit': 6954088}) 
+
+def _add_liqui_with_decimal(router, token0Address, decimal0, token1Address, decimal1, amount0, amount1):
+    print(token0Address, token1Address)
+    token0 = MockToken.at(token0Address)
+    token1 = MockToken.at(token1Address)
+    token0.approve(router.address, 1000000*10**decimal0)
+    token1.approve(router.address, 1000000*10**decimal1)
+    router.addLiquidity(token0Address, token1Address, int(amount0*10**decimal0), int(amount1*10**decimal1), int(amount0/2*10**decimal0), int(amount1/2*10**decimal1), accs[0], int(time.time())+100, {'allow_revert': True, 'gas_limit': 6954088}) 
 
 def add_bnb_pure_liqui(router, tokenAddr, amount0, bnb_amount):
     # router = PureSwapRouter.at('0x6721A6cdf88E279F95032132077a78899514B347')
@@ -143,6 +187,13 @@ def add_lpfarm(factory, chef):
         pair = factory.allPairs(i)
         print("Pair address:", pair)
         chef.add(100, pair, True, {'allow_revert': True, 'gas_limit': 6954088})
+
+points = [20, 5, 5, 2, 2, 2, 50, 10, 2, 2, 2, 1, 1, 1]
+def add_lpfarm2(factory, chef):
+    for i in range(14):
+        pair = factory.allPairs(i)
+        print("Pair address:", pair)
+        chef.add(points[i] * 100, pair, True, {'allow_revert': True, 'gas_limit': 6954088})
 
 def add_singleFarm(chef, tokens):
     for t in tokens:
