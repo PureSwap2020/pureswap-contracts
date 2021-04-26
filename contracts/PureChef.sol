@@ -60,7 +60,7 @@ contract PureChef is Ownable {
     // PURE tokens created per block.
     uint256 public pureTokenPerBlock;
     // Bonus muliplier for early pureToken makers.
-    uint256 public constant BONUS_MULTIPLIER = 1;
+    // uint256 public constant BONUS_MULTIPLIER = 1;
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
     IMigratorChef public migrator;
     // Info of each pool.
@@ -84,6 +84,7 @@ contract PureChef is Ownable {
         uint256 _pureTokenPerBlock,
         uint256 _startBlock
     ) public {
+        require(_pureToken != address(0), "_pureToken is zero address");
         pureToken = _pureToken;
         pureTokenPerBlock = _pureTokenPerBlock;
         startBlock = _startBlock;
@@ -117,6 +118,7 @@ contract PureChef is Ownable {
     }
 
     // Update the given pool's PURE allocation point. Can only be called by the owner.
+    event SetPoolPoint(uint _pid, uint _point);
     function set(
         uint256 _pid,
         uint256 _allocPoint,
@@ -129,13 +131,17 @@ contract PureChef is Ownable {
             _allocPoint
         );
         poolInfo[_pid].allocPoint = _allocPoint;
+        emit SetPoolPoint(_pid, _allocPoint);
     }
 
+    event SetMigrator(address _migrator);
     // Set the migrator contract. Can only be called by the owner.
     function setMigrator(IMigratorChef _migrator) public onlyOwner {
         migrator = _migrator;
+        emit SetMigrator(address(_migrator));
     }
 
+    event Migrate(uint _pid);
     // Migrate lp token to another lp contract. Can be called by anyone. We trust that migrator contract is good.
     function migrate(uint256 _pid) public {
         require(address(migrator) != address(0), "migrate: no migrator");
@@ -146,6 +152,7 @@ contract PureChef is Ownable {
         IERC20 newLpToken = migrator.migrate(lpToken);
         require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
         pool.lpToken = newLpToken;
+        emit Migrate(_pid);
     }
 
     // Return reward multiplier over the given _from to _to block.

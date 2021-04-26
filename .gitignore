@@ -4,3 +4,6 @@ __pycache__
 build/
 reports/
 scripts/*
+
+contracts/TimeDistribution.sol
+.vscode/

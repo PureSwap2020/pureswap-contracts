@@ -60,7 +60,7 @@ contract SingleChef is Ownable {
     // PURE tokens created per block.
     uint256 public pureTokenPerBlock;
     // Bonus muliplier for early pureToken makers.
-    uint256 public constant BONUS_MULTIPLIER = 1;
+    // uint256 public constant BONUS_MULTIPLIER = 1;
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
     // IMigratorChef public migrator;
     // Info of each pool.
@@ -86,6 +86,7 @@ contract SingleChef is Ownable {
         uint256 _pureTokenPerBlock,
         uint256 _startBlock
     ) public {
+        require(_pureToken != address(0), "_pureToken is zero address");
         pureToken = _pureToken;
         pureTokenPerBlock = _pureTokenPerBlock;
         startBlock = _startBlock;
@@ -95,8 +96,10 @@ contract SingleChef is Ownable {
         return poolInfo.length;
     }
 
+    event SetDispatcher(address acc);
     function setDispatcher(address _account) external onlyOwner {
         dispatcher = _account;
+        emit SetDispatcher(_account);
     }
 
     // Add a new lp to the pool. Can only be called by the owner.

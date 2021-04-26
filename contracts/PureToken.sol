@@ -15,7 +15,7 @@ contract PureToken is ERC20Capped, Ownable{
 
     constructor(address _to)
         public
-        ERC20("PureToken", "PURE")
+        ERC20("PureSwap Token", "PURE")
         ERC20Capped(125000000 * 10**18)
     {
         _mint(_to, 125_000_000 * 10**18);
